@@ -61,12 +61,18 @@ class element extends \tool_certificate\element {
      * @return array
      */
     protected static function get_program_fields(): array {
-        return [
+        $fields = [
             'fullname' => get_string('programname', 'enrol_programs'),
             'idnumber' => get_string('programidnumber', 'enrol_programs'),
             'url' => get_string('programurl', 'enrol_programs'),
             'timecompleted' => get_string('programcompletion', 'enrol_programs'),
         ];
+        $handler = \enrol_programs\customfield\fields_handler::create();
+        $customfields = $handler->get_fields();
+        foreach ($customfields as $customfield) {
+            $fields[$customfield->get('shortname')] = $customfield->get('name');
+        }
+        return $fields;
     }
 
     /**
@@ -132,6 +138,18 @@ class element extends \tool_certificate\element {
             } else if ($field === 'timecompleted') {
                 if (isset($data->programtimecompleted)) {
                     $value = $this->get_date_format_string($data->programtimecompleted, $this->dateformat);
+                }
+            } else {
+                if (isset($data->programid)) {
+                    $handler = \enrol_programs\customfield\fields_handler::create();
+                    $customfielddata = $handler->get_instance_data($data->programid);
+                    $customfields = [];
+                    foreach ($customfielddata as $data) {
+                        $customfields[$data->get_field()->get('shortname')] = $data->export_value();
+                    }
+                    if (!empty($customfields[$field])) {
+                        $value = $customfields[$field];
+                    }
                 }
             }
         }
