@@ -27,11 +27,14 @@ defined('MOODLE_INTERNAL') || die();
 
 /** @var stdClass $plugin */
 
-$plugin->version   = 2024010800;
+$plugin->version   = 2024090500;
 $plugin->requires  = 2023100902.00; // 4.3.2
 $plugin->component = 'certificateelement_programs';
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->release   = 'v3.3.0dev';
 $plugin->supported = [403, 403];
 
-$plugin->dependencies = ['enrol_programs' => 2024010800, 'tool_certificate' => 2023110900];
+$plugin->dependencies = [
+    'enrol_programs' => 2024080300,
+    'tool_certificate' => 2024081300,
+];

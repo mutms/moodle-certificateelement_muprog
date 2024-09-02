@@ -25,11 +25,143 @@ namespace certificateelement_programs;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class element extends \tool_certificate\element {
+    /**
+     * Returns list of available program fields.
+     *
+     * @return array
+     */
+    public static function get_program_fields(): array {
+        return [
+            'fullname' => get_string('programname', 'enrol_programs'),
+            'idnumber' => get_string('programidnumber', 'enrol_programs'),
+            'url' => get_string('programurl', 'enrol_programs'),
+            'timecompleted' => get_string('programcompletion', 'enrol_programs'),
+        ];
+    }
 
     /**
-     * @var string $dateformat dateformat for date field.
+     * Returns fields that have date format.
+     * @return string[]
      */
-    private $dateformat;
+    public static function get_date_fields(): array {
+        return ['timecompleted'];
+    }
+
+    /**
+     * Helper function to return all the date and time formats.
+     *
+     * @return array the list of date format string names with examples
+     */
+    public static function get_date_formats(): array {
+        // Hard-code date so users can see the difference between short dates with and without the leading zero.
+        // Eg. 06/07/18 vs 6/07/18.
+        $date = 1530849658;
+
+        $strdateformats = [
+            'strftimedate',
+            'strftimedatefullshort',
+            'strftimedatefullshortwleadingzero',
+            'strftimedateshort',
+            'strftimedaydate',
+            'strftimedayshort',
+            'strftimemonthyear',
+            // On sites with timezones the actual time may be also important.
+            'strftimedatetime',
+            'strftimedatemonthtimeshort',
+            'strftimedaydatetime',
+            'strftimedatetimeshort',
+        ];
+
+        $dateformats = [];
+        foreach ($strdateformats as $strdateformat) {
+            $dateformats[$strdateformat] = self::format_date($date, $strdateformat);
+        }
+
+        return $dateformats;
+    }
+
+    /**
+     * Returns the date in a selected readable format.
+     *
+     * @param int|null $timestamp
+     * @param string $dateformat
+     * @return string
+     */
+    public static function format_date(?int $timestamp, string $dateformat): string {
+        if ($timestamp <= 0) {
+            return '';
+        }
+        if (strpos($dateformat, 'wleadingzero') !== false) {
+            $dateformat = str_replace('wleadingzero', '', $dateformat);
+            return userdate($timestamp, get_string($dateformat, 'langconfig'), 99, false);
+        } else {
+            return userdate($timestamp, get_string($dateformat, 'langconfig'));
+        }
+    }
+
+    /**
+     * Decode database field tool_certificate_elements.data value.
+     *
+     * @param string|null $data
+     * @return \stdClass
+     */
+    public static function decode_programfield_data(?string $data): \stdClass {
+        if ($data === null || $data === '') {
+            $fd = (object)['programfield' => null];
+
+        } else if (substr($data, 0, 1) !== '{') {
+            // Original field value is program field.
+            $fd = (object)['programfield' => $data];
+
+        } else {
+            $fd = json_decode($data);
+            if (!is_object($fd)) {
+                $fd = (object)['programfield' => null];
+            } else if (isset($fd->dateitem)) {
+                // Problematic optional json.
+                $fd = (object)['programfield' => $fd->dateitem, 'dateformat' => $fd->dateformat];
+            } else {
+                if (empty($fd->programfield)) {
+                    // Error indication.
+                    $fd = (object)['programfield' => null];
+                }
+            }
+        }
+
+        $datefields = self::get_date_fields();
+        if (in_array($fd->programfield, $datefields, true)) {
+            if (empty($fd->dateformat)) {
+                // Use default - first value from self::get_date_formats().
+                $fd->dateformat = 'strftimedate';
+            }
+        }
+
+        return $fd;
+    }
+
+    /**
+     * Returns program field info.
+     * @return \stdClass
+     */
+    public function get_programfield(): \stdClass {
+        $data = $this->get_data();
+        return self::decode_programfield_data($data);
+    }
+
+    /**
+     * Prepare data to pass to moodleform::set_data()
+     *
+     * @return \stdClass|array
+     */
+    public function prepare_data_for_form() {
+        $record = parent::prepare_data_for_form();
+        $pf = $this->get_programfield();
+        $record->programfield = $pf->programfield;
+        if (isset($pf->dateformat)) {
+            $record->dateformat = $pf->dateformat;
+        }
+        return $record;
+    }
 
     /**
      * This function renders the form elements when adding a certificate element.
@@ -40,33 +172,22 @@ class element extends \tool_certificate\element {
 
         // Get the program fields.
         $fields = self::get_program_fields();
+        $dateformats = self::get_date_formats();
 
         // Create the select box where the user field is selected.
         $mform->addElement('select', 'programfield', get_string('programfield', 'certificateelement_programs'), $fields);
-        $mform->setType('programfield', PARAM_ALPHANUM);
         $mform->addHelpButton('programfield', 'programfield', 'certificateelement_programs');
 
-        $mform->addElement('select', 'dateformat', get_string('dateformat', 'certificateelement_date'),
-            \certificateelement_date\element::get_date_formats());
-        $mform->addHelpButton('dateformat', 'dateformat', 'certificateelement_date');
+        $mform->addElement('select', 'dateformat', get_string('dateformat', 'certificateelement_programs'), $dateformats);
+        $mform->addHelpButton('dateformat', 'dateformat', 'certificateelement_programs');
 
-        $mform->hideIf('dateformat', 'programfield', 'neq', 'timecompleted');
+        $nondates = $fields;
+        foreach (self::get_date_fields() as $field) {
+            unset($nondates[$field]);
+        }
+        $mform->hideIf('dateformat', 'programfield', 'in', array_keys($nondates));
 
         parent::render_form_elements($mform);
-    }
-
-    /**
-     * Returns list of available program fields.
-     *
-     * @return array
-     */
-    protected static function get_program_fields(): array {
-        return [
-            'fullname' => get_string('programname', 'enrol_programs'),
-            'idnumber' => get_string('programidnumber', 'enrol_programs'),
-            'url' => get_string('programurl', 'enrol_programs'),
-            'timecompleted' => get_string('programcompletion', 'enrol_programs'),
-        ];
     }
 
     /**
@@ -76,11 +197,51 @@ class element extends \tool_certificate\element {
      * @param \stdClass $data the form data or partial data to be updated
      */
     public function save_form_data(\stdClass $data) {
-        $data->data = $data->programfield;
-        if (isset($data->dateformat)) {
-            $data->data = json_encode(['dateitem' => $data->programfield, 'dateformat' => $data->dateformat]);
+        // Encode database field tool_certificate_elements.data value.
+        $fd = new \stdClass();
+        $fd->programfield = $data->programfield;
+        $datefields = self::get_date_fields();
+        if (in_array($fd->programfield, $datefields, true)) {
+            $fd->dateformat = $data->dateformat;
         }
+        unset($data->programfield);
+        unset($data->dateformat);
+
+        $data->data = json_encode($fd);
         parent::save_form_data($data);
+    }
+
+    /**
+     * Get preview text for this field.
+     *
+     * @return string
+     */
+    protected function get_preview(): string {
+        $pf = $this->get_programfield();
+        if ($pf->programfield === 'fullname') {
+            $value = 'Program 001';
+        } else if ($pf->programfield === 'idnumber') {
+            $value = 'P001';
+        } else if ($pf->programfield === 'url') {
+            $url = new \moodle_url('/enrol/programs/catalogue/program', ['id' => 1]);
+            $value = \html_writer::link($url, $url->out(false));
+        } else if ($pf->programfield === 'timecompleted') {
+            $value = $this->format_date(time(), $pf->dateformat);
+        } else {
+            $value = get_string('error');
+        }
+        return $value;
+    }
+
+    /**
+     * Render the element in html.
+     *
+     * This function is used to render the element when we are using the
+     * drag and drop interface to position it.
+     */
+    public function render_html() {
+        $value = $this->get_preview();
+        return \tool_certificate\element_helper::render_html_content($this, $value);
     }
 
     /**
@@ -92,118 +253,34 @@ class element extends \tool_certificate\element {
      * @param \stdClass $issue the issue we are rendering
      */
     public function render($pdf, $preview, $user, $issue) {
-        $field = $this->get_data();
-
-        $field = self::prepare_datefield($field);
         if ($preview) {
-            if ($field === 'fullname') {
-                $value = 'Program 001';
-                $value = format_string($value, true, ['context' => \context_system::instance()]);
-            } else if ($field === 'idnumber') {
-                $value = 'P001';
-                $value = s($value);
-            } else if ($field === 'url') {
-                $url = new \moodle_url('/enrol/programs/catalogue/program', ['id' => 1]);
-                $value = \html_writer::link($url, $url->out(false));
-            } else if ($field === 'timecompleted') {
-                $value = $this->get_date_format_string(time(), $this->dateformat);
-            } else {
-                $value = $field;
-                $value = s($value);
-            }
+            $value = $this->get_preview();
         } else {
+            $pf = $this->get_programfield();
             $data = (object)json_decode($issue->data);
             $value = get_string('error');
-            if ($field === 'fullname') {
+            if ($pf->programfield === 'fullname') {
                 if (isset($data->programfullname)) {
                     $value = $data->programfullname;
                     $value = format_string($value, true, ['context' => \context_system::instance()]);
                 }
-            } else if ($field === 'idnumber') {
+            } else if ($pf->programfield === 'idnumber') {
                 if (isset($data->programidnumber)) {
                     $value = $data->programidnumber;
                     $value = s($value);
                 }
-            } else if ($field === 'url') {
+            } else if ($pf->programfield === 'url') {
                 if (isset($data->programid)) {
                     $url = new \moodle_url('/enrol/programs/catalogue/program', ['id' => $data->programid]);
                     $value = \html_writer::link($url, $url->out(false));
                 }
-            } else if ($field === 'timecompleted') {
+            } else if ($pf->programfield === 'timecompleted') {
                 if (isset($data->programtimecompleted)) {
-                    $value = $this->get_date_format_string($data->programtimecompleted, $this->dateformat);
+                    $value = $this->format_date($data->programtimecompleted, $pf->dateformat);
                 }
             }
         }
 
         \tool_certificate\element_helper::render_content($pdf, $this, $value);
-    }
-
-    /**
-     * Render the element in html.
-     *
-     * This function is used to render the element when we are using the
-     * drag and drop interface to position it.
-     */
-    public function render_html() {
-        // The value to display - we always want to show a value here so it can be repositioned.
-        $fields = self::get_program_fields();
-        $value = $fields[$this->get_data()] ?? $this->get_data();
-        $value = $this->prepare_datefield($value);
-        if ($value == 'timecompleted') {
-            $value = $this->get_date_format_string(time(), $this->dateformat);
-        }
-        $value = format_string($value, true, ['context' => \context_system::instance()]);
-        return \tool_certificate\element_helper::render_html_content($this, $value);
-    }
-
-    /**
-     * Prepare data to pass to moodleform::set_data()
-     *
-     * @return \stdClass|array
-     */
-    public function prepare_data_for_form() {
-        $record = parent::prepare_data_for_form();
-        if ($this->get_data()) {
-            $record->programfield = $this->get_data();
-            $record->programfield = self::prepare_datefield($record->programfield);
-        }
-        if (isset($this->dateformat)) {
-            $record->dateformat = $this->dateformat;
-        }
-        return $record;
-    }
-
-    /**
-     * Prepare date field for the element - separating the format and the date item.
-     *
-     * @param string $value of the element
-     * @return string
-     */
-    private function prepare_datefield(string $value) {
-        if (strpos($value, 'timecompleted') !== false) {
-            $data = json_decode($value);
-            $this->dateformat = $data->dateformat;
-            $value = $data->dateitem;
-        }
-        return $value;
-    }
-
-    /**
-     * Returns the date in a readable format.
-     *
-     * @param int $date
-     * @param string $dateformat
-     * @return string
-     */
-    protected static function get_date_format_string($date, $dateformat) {
-        if ($dateformat == 'strftimedatefullshortwleadingzero') {
-            $certificatedate = userdate($date, get_string('strftimedatefullshort', 'langconfig'), 99, false);
-        } else if (get_string_manager()->string_exists($dateformat, 'langconfig')) {
-            $certificatedate = userdate($date, get_string($dateformat, 'langconfig'));
-        } else {
-            $certificatedate = userdate($date, get_string('strftimedate', 'langconfig'));
-        }
-        return $certificatedate;
     }
 }

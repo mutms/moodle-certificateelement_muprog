@@ -24,26 +24,181 @@ namespace certificateelement_programs;
  * @copyright 2022 Open LMS (https://www.openlms.net/)
  * @author    Petr Skoda
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @coversDefaultClass \certificateelement_programs\element
  */
 final class element_test extends \advanced_testcase {
-
     /**
      * Test set up.
      */
-    public function setUp(): void {
+    protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
     /**
-     * Test render_html and pdf generator.
+     * @covers ::get_program_fields
      */
-    public function test_render_html() {
-        global $CFG;
+    public function test_get_program_fields(): void {
+        $fields = element::get_program_fields();
+        foreach ($fields as $field => $name) {
+            $this->assertIsString($name);
+            $this->assertSame($field, clean_param($field, PARAM_ALPHANUM));
+        }
+    }
 
+    /**
+     * @covers ::get_date_fields
+     */
+    public function test_get_date_fields(): void {
+        $fields = element::get_date_fields();
+        $this->assertSame(['timecompleted'], $fields);
+    }
+
+    /**
+     * @covers ::get_date_formats
+     */
+    public function test_get_date_formats(): void {
+        $formats = element::get_date_formats();
+        foreach ($formats as $format => $example) {
+            $this->assertIsString($example);
+            $this->assertSame($format, clean_param($format, PARAM_STRINGID));
+        }
+    }
+
+    /**
+     * @covers ::format_date
+     */
+    public function test_format_date(): void {
+        $now = time();
+        $formats = element::get_date_formats();
+        foreach ($formats as $format => $example) {
+            $result = element::format_date($now, $format);
+            $this->assertGreaterThan(0, strlen($result));
+        }
+    }
+
+    /**
+     * @covers ::decode_programfield_data
+     */
+    public function test_decode_programfield_data(): void {
+        $result = element::decode_programfield_data(json_encode((object)['programfield' => 'fullname']));
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'fullname'], (array)$result);
+
+        $result = element::decode_programfield_data(json_encode((object)['programfield' => 'idnumber']));
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'idnumber'], (array)$result);
+
+        $result = element::decode_programfield_data(json_encode((object)['programfield' => 'timecompleted', 'dateformat' => 'strftimedatefullshort']));
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedatefullshort'], (array)$result);
+
+        $result = element::decode_programfield_data(json_encode((object)['programfield' => 'timecompleted']));
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedate'], (array)$result);
+
+        $result = element::decode_programfield_data('');
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => null], (array)$result);
+
+        $result = element::decode_programfield_data(null);
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => null], (array)$result);
+
+        // Historic date formats.
+
+        $result = element::decode_programfield_data('fullname');
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'fullname'], (array)$result);
+
+        $result = element::decode_programfield_data('idnumber');
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'idnumber'], (array)$result);
+
+        $result = element::decode_programfield_data(json_encode((object)['dateitem' => 'timecompleted', 'dateformat' => 'strftimedatefullshort']));
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedatefullshort'], (array)$result);
+
+        $result = element::decode_programfield_data('timecompleted');
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedate'], (array)$result);
+    }
+
+    /**
+     * @covers ::get_programfield
+     */
+    public function test_get_programfield(): void {
         /** @var \tool_certificate_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('tool_certificate');
 
-        require_once($CFG->dirroot.'/user/profile/lib.php');
+        $this->setAdminUser();
+
+        $certificate1 = $generator->create_template((object)['name' => 'Certificate 1']);
+        $pageid = $generator->create_page($certificate1)->get_id();
+
+        /** @var element $element */
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Nazev', 'programfield' => 'fullname']);
+        $this->assertSame(['programfield' => 'fullname'], (array)$element->get_programfield());
+
+        /** @var element $element */
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'ID programu', 'programfield' => 'idnumber']);
+        $this->assertSame(['programfield' => 'idnumber'], (array)$element->get_programfield());
+
+        /** @var element $element */
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Odkaz', 'programfield' => 'url']);
+        $this->assertSame(['programfield' => 'url'], (array)$element->get_programfield());
+
+        /** @var element $element */
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Dokonceno', 'programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
+        $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedate'], (array)$element->get_programfield());
+    }
+
+    /**
+     * @covers ::prepare_data_for_form
+     */
+    public function test_prepare_data_for_form(): void {
+        /** @var \tool_certificate_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('tool_certificate');
+
+        $this->setAdminUser();
+
+        $certificate1 = $generator->create_template((object)['name' => 'Certificate 1']);
+        $pageid = $generator->create_page($certificate1)->get_id();
+
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Nazev', 'programfield' => 'fullname']);
+        $result = $element->prepare_data_for_form();
+        $this->assertSame('fullname', $result->programfield);
+        $this->assertSame('Nazev', $result->name);
+
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'ID programu', 'programfield' => 'idnumber']);
+        $result = $element->prepare_data_for_form();
+        $this->assertSame('idnumber', $result->programfield);
+        $this->assertSame('ID programu', $result->name);
+
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Odkaz', 'programfield' => 'url']);
+        $result = $element->prepare_data_for_form();
+        $this->assertSame('url', $result->programfield);
+        $this->assertSame('Odkaz', $result->name);
+
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Dokonceno', 'programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
+        $result = $element->prepare_data_for_form();
+        $this->assertSame('timecompleted', $result->programfield);
+        $this->assertSame('strftimedate', $result->dateformat);
+        $this->assertSame('Dokonceno', $result->name);
+
+        $element = element::instance(0, (object)['pageid' => $pageid, 'element' => 'programs']);
+        $result = $element->prepare_data_for_form();
+        $this->assertSame(null, $result->programfield);
+    }
+
+    /**
+     * @covers ::render_html
+     * @covers ::get_preview
+     */
+    public function test_render_html(): void {
+        /** @var \tool_certificate_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('tool_certificate');
 
         $this->setAdminUser();
 
@@ -51,18 +206,35 @@ final class element_test extends \advanced_testcase {
         $pageid = $generator->create_page($certificate1)->get_id();
 
         $element = $generator->create_element($pageid, 'programs', ['programfield' => 'fullname']);
-        $this->assertStringContainsString('Program name', $element->render_html());
+        $this->assertStringContainsString('Program 001', $element->render_html());
 
         $formdata = (object)['name' => 'Program id', 'programfield' => 'idnumber'];
         $element = $generator->create_element($pageid, 'programs', $formdata);
-        $this->assertStringContainsString('Program idnumber', $element->render_html());
+        $this->assertStringContainsString('P001', $element->render_html());
 
         $element = $generator->create_element($pageid, 'programs', ['programfield' => 'url']);
-        $this->assertStringContainsString('Program URL', $element->render_html());
+        $this->assertStringContainsString('https://www.example.com/moodle/enrol/programs/catalogue/program?id=1', $element->render_html());
 
         $element = $generator->create_element($pageid, 'programs', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
         $date = userdate(time(), '%d %B %Y');
         $this->assertStringContainsString($date, $element->render_html());
+    }
+
+    /**
+     * @covers ::render
+     */
+    public function test_render(): void {
+        /** @var \tool_certificate_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('tool_certificate');
+
+        $this->setAdminUser();
+
+        $certificate1 = $generator->create_template((object)['name' => 'Certificate 1']);
+        $pageid = $generator->create_page($certificate1)->get_id();
+        $generator->create_element($pageid, 'programs', ['programfield' => 'fullname']);
+        $generator->create_element($pageid, 'programs', ['name' => 'Program id', 'programfield' => 'idnumber']);
+        $generator->create_element($pageid, 'programs', ['programfield' => 'url']);
+        $generator->create_element($pageid, 'programs', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
 
         // Generate PDF for preview.
         $filecontents = $generator->generate_pdf($certificate1, true);
