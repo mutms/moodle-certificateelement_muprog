@@ -24,19 +24,29 @@ namespace certificateelement_programs;
  * @author     Petr Skoda
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class element extends \tool_certificate\element {
+final class element extends \tool_certificate\element {
+    /** @var \core_customfield\field_controller[] cached fields */
+    private $fields = null;
+
     /**
      * Returns list of available program fields.
      *
      * @return array
      */
     public static function get_program_fields(): array {
-        return [
+        $fields = [
             'fullname' => get_string('programname', 'enrol_programs'),
             'idnumber' => get_string('programidnumber', 'enrol_programs'),
             'url' => get_string('programurl', 'enrol_programs'),
             'timecompleted' => get_string('programcompletion', 'enrol_programs'),
         ];
+
+        $handler = \enrol_programs\customfield\fields_handler::create();
+        if ($handler->get_fields()) {
+            $fields['customfield'] = get_string('customfield', 'core_customfield');
+        }
+
+        return $fields;
     }
 
     /**
@@ -136,6 +146,12 @@ class element extends \tool_certificate\element {
             }
         }
 
+        if ($fd->programfield === 'customfield') {
+            if (empty($fd->customfieldid)) {
+                $fd->customfieldid = null;
+            }
+        }
+
         return $fd;
     }
 
@@ -149,6 +165,19 @@ class element extends \tool_certificate\element {
     }
 
     /**
+     * Returns program custom fields.
+     *
+     * @return \core_customfield\field_controller[]
+     */
+    public function get_customfields(): array {
+        if ($this->fields === null) {
+            $handler = \enrol_programs\customfield\fields_handler::create();
+            $this->fields = $handler->get_fields();
+        }
+        return $this->fields;
+    }
+
+    /**
      * Prepare data to pass to moodleform::set_data()
      *
      * @return \stdClass|array
@@ -156,9 +185,8 @@ class element extends \tool_certificate\element {
     public function prepare_data_for_form() {
         $record = parent::prepare_data_for_form();
         $pf = $this->get_programfield();
-        $record->programfield = $pf->programfield;
-        if (isset($pf->dateformat)) {
-            $record->dateformat = $pf->dateformat;
+        foreach ((array)$pf as $k => $v) {
+            $record->{$k} = $v;
         }
         return $record;
     }
@@ -187,7 +215,35 @@ class element extends \tool_certificate\element {
         }
         $mform->hideIf('dateformat', 'programfield', 'in', array_keys($nondates));
 
+        if (isset($fields['customfield'])) {
+            $customfieldids = ['' => get_string('choosedots')];
+            foreach ($this->get_customfields() as $cf) {
+                $customfieldids[$cf->get('id')] = $cf->get_formatted_name();
+            }
+            $mform->addElement('select', 'customfieldid', get_string('customfield', 'core_customfield'), $customfieldids);
+            $mform->hideIf('customfieldid', 'programfield', 'noteq', 'customfield');
+        }
+
         parent::render_form_elements($mform);
+    }
+
+    /**
+     * Performs validation on the element values.
+     *
+     * @param array $data the submitted data
+     * @param array $files the submitted files
+     * @return array the validation errors
+     */
+    public function validate_form_elements($data, $files) {
+        $errors = parent::validate_form_elements($data, $files);
+
+        if ($data['programfield'] === 'customfield') {
+            if (empty($data['customfieldid'])) {
+                $errors['customfieldid'] = get_string('required');
+            }
+        }
+
+        return $errors;
     }
 
     /**
@@ -197,15 +253,29 @@ class element extends \tool_certificate\element {
      * @param \stdClass $data the form data or partial data to be updated
      */
     public function save_form_data(\stdClass $data) {
+        // If name is empty then use field type name.
+        if (property_exists($data, 'name') && $data->name === '') {
+            if ($data->programfield === 'customfield') {
+                $cfs = $this->get_customfields();
+                $data->name = $cfs[$data->customfieldid]->get_formatted_name();
+            } else {
+                $fields = self::get_program_fields();
+                $data->name = $fields[$data->programfield];
+            }
+        }
+
         // Encode database field tool_certificate_elements.data value.
         $fd = new \stdClass();
         $fd->programfield = $data->programfield;
         $datefields = self::get_date_fields();
         if (in_array($fd->programfield, $datefields, true)) {
             $fd->dateformat = $data->dateformat;
+        } else if ($fd->programfield === 'customfield') {
+            $fd->customfieldid = $data->customfieldid;
         }
         unset($data->programfield);
         unset($data->dateformat);
+        unset($data->customfieldid);
 
         $data->data = json_encode($fd);
         parent::save_form_data($data);
@@ -227,6 +297,18 @@ class element extends \tool_certificate\element {
             $value = \html_writer::link($url, $url->out(false));
         } else if ($pf->programfield === 'timecompleted') {
             $value = $this->format_date(time(), $pf->dateformat);
+        } else if ($pf->programfield === 'customfield') {
+            $value = null;
+            foreach ($this->get_customfields() as $cf) {
+                if ($cf->get('id') == $pf->customfieldid) {
+                    // It is not easy to guess what it would look like, so just use placeholder like value.
+                    $value = '[' . $cf->get_formatted_name() .']';
+                    break;
+                }
+            }
+            if ($value === null) {
+                $value = get_string('error');
+            }
         } else {
             $value = get_string('error');
         }
@@ -277,6 +359,17 @@ class element extends \tool_certificate\element {
             } else if ($pf->programfield === 'timecompleted') {
                 if (isset($data->programtimecompleted)) {
                     $value = $this->format_date($data->programtimecompleted, $pf->dateformat);
+                }
+            } else if ($pf->programfield === 'customfield') {
+                $cfs = $this->get_customfields();
+                if (isset($cfs[$pf->customfieldid])) {
+                    // Ignore the visibility here and use lower level API.
+                    $cfdata = \core_customfield\api::get_instance_fields_data(
+                        [$pf->customfieldid => $cfs[$pf->customfieldid]], $data->programid);
+                    if (count($cfdata) === 1) {
+                        $cfdata = reset($cfdata);
+                        $value = (string)$cfdata->export_value();
+                    }
                 }
             }
         }

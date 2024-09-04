@@ -45,6 +45,34 @@ final class element_test extends \advanced_testcase {
             $this->assertIsString($name);
             $this->assertSame($field, clean_param($field, PARAM_ALPHANUM));
         }
+        $this->assertArrayNotHasKey('customfield', $fields);
+
+        $this->setAdminUser();
+
+        $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
+            'component' => 'enrol_programs',
+            'area' => 'fields',
+            'name' => 'Program custom fields',
+        ]);
+        $field1 = $this->getDataGenerator()->create_custom_field([
+            'shortname' => 'testfield1',
+            'name' => 'Extra text field',
+            'type' => 'text',
+            'categoryid' => $fieldcategory->get('id'),
+        ]);
+        $field2 = $this->getDataGenerator()->create_custom_field([
+            'shortname' => 'testfield2',
+            'name' => 'Extra checkbox field',
+            'type' => 'checkbox',
+            'categoryid' => $fieldcategory->get('id'),
+            'configdata' => ['visibilitymanagers' => true]
+        ]);
+
+        $fields2 = element::get_program_fields();
+        $this->assertArrayHasKey('customfield', $fields2);
+        $this->assertSame('Custom field', $fields2['customfield']);
+        unset($fields2['customfield']);
+        $this->assertSame($fields, $fields2);
     }
 
     /**
@@ -93,6 +121,11 @@ final class element_test extends \advanced_testcase {
         $result = element::decode_programfield_data(json_encode((object)['programfield' => 'timecompleted', 'dateformat' => 'strftimedatefullshort']));
         $this->assertIsObject($result);
         $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedatefullshort'], (array)$result);
+
+        $result = element::decode_programfield_data(json_encode(
+            (object)['programfield' => 'customfield', 'customfieldid' => '111']));
+        $this->assertIsObject($result);
+        $this->assertSame(['programfield' => 'customfield', 'customfieldid' => '111'], (array)$result);
 
         $result = element::decode_programfield_data(json_encode((object)['programfield' => 'timecompleted']));
         $this->assertIsObject($result);
@@ -152,6 +185,21 @@ final class element_test extends \advanced_testcase {
         /** @var element $element */
         $element = $generator->create_element($pageid, 'programs', ['name' => 'Dokonceno', 'programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
         $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedate'], (array)$element->get_programfield());
+
+        $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
+            'component' => 'enrol_programs',
+            'area' => 'fields',
+            'name' => 'Program custom fields',
+        ]);
+        $field1 = $this->getDataGenerator()->create_custom_field([
+            'shortname' => 'testfield1',
+            'name' => 'Extra text field',
+            'type' => 'text',
+            'categoryid' => $fieldcategory->get('id'),
+        ]);
+        /** @var element $element */
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $this->assertSame(['programfield' => 'customfield', 'customfieldid' => $field1->get('id')], (array)$element->get_programfield());
     }
 
     /**
@@ -190,6 +238,23 @@ final class element_test extends \advanced_testcase {
         $element = element::instance(0, (object)['pageid' => $pageid, 'element' => 'programs']);
         $result = $element->prepare_data_for_form();
         $this->assertSame(null, $result->programfield);
+
+        $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
+            'component' => 'enrol_programs',
+            'area' => 'fields',
+            'name' => 'Program custom fields',
+        ]);
+        $field1 = $this->getDataGenerator()->create_custom_field([
+            'shortname' => 'testfield1',
+            'name' => 'Extra text field',
+            'type' => 'text',
+            'categoryid' => $fieldcategory->get('id'),
+        ]);
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $result = $element->prepare_data_for_form();
+        $this->assertSame('customfield', $result->programfield);
+        $this->assertSame($field1->get('id'), $result->customfieldid);
+        $this->assertSame('Some text', $result->name);
     }
 
     /**
@@ -218,6 +283,20 @@ final class element_test extends \advanced_testcase {
         $element = $generator->create_element($pageid, 'programs', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
         $date = userdate(time(), '%d %B %Y');
         $this->assertStringContainsString($date, $element->render_html());
+
+        $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
+            'component' => 'enrol_programs',
+            'area' => 'fields',
+            'name' => 'Program custom fields',
+        ]);
+        $field1 = $this->getDataGenerator()->create_custom_field([
+            'shortname' => 'testfield1',
+            'name' => 'Extra text field',
+            'type' => 'text',
+            'categoryid' => $fieldcategory->get('id'),
+        ]);
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $this->assertStringContainsString('[Extra text field]', $element->render_html());
     }
 
     /**
@@ -226,9 +305,12 @@ final class element_test extends \advanced_testcase {
     public function test_render(): void {
         /** @var \tool_certificate_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('tool_certificate');
+        /** @var \enrol_programs_generator $programgenerator */
+        $programgenerator = $this->getDataGenerator()->get_plugin_generator('enrol_programs');
 
         $this->setAdminUser();
 
+        $program1 = $programgenerator->create_program();
         $certificate1 = $generator->create_template((object)['name' => 'Certificate 1']);
         $pageid = $generator->create_page($certificate1)->get_id();
         $generator->create_element($pageid, 'programs', ['programfield' => 'fullname']);
@@ -244,7 +326,7 @@ final class element_test extends \advanced_testcase {
         // Generate PDF for issue.
         $user = $this->getDataGenerator()->create_user();
         $issuedata = [
-            'programid' => '1',
+            'programid' => $program1->id,
             'programfullname' => 'Program 001',
             'programidnumber' => 'P001',
             'programtimecompleted' => time(),
@@ -257,6 +339,46 @@ final class element_test extends \advanced_testcase {
 
         // Incorrectly manually generated cert.
         $issue = $generator->issue($certificate1, $user);
+        $filecontents = $generator->generate_pdf($certificate1, false, $issue);
+        $filesize = \core_text::strlen($filecontents);
+        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+
+        // Generate PDF with program custom field.
+        $user2 = $this->getDataGenerator()->create_user();
+        $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
+            'component' => 'enrol_programs',
+            'area' => 'fields',
+            'name' => 'Program custom fields',
+        ]);
+        $field1 = $this->getDataGenerator()->create_custom_field([
+            'shortname' => 'testfield1',
+            'name' => 'Extra text field',
+            'type' => 'text',
+            'categoryid' => $fieldcategory->get('id'),
+        ]);
+        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $program2 = $programgenerator->create_program(['customfield_testfield1' => 'abc']);
+        $issuedata = [
+            'programid' => $program2->id,
+            'programfullname' => $program2->fullname,
+            'programidnumber' => $program2->idnumber,
+            'programtimecompleted' => time(),
+            'programallocationid' => '111',
+        ];
+        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
+        $filecontents = $generator->generate_pdf($certificate1, false, $issue);
+        $filesize = \core_text::strlen($filecontents);
+        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+
+        \enrol_programs\local\program::delete_program($program2->id);
+        $issuedata = [
+            'programid' => $program2->id,
+            'programfullname' => $program2->fullname,
+            'programidnumber' => $program2->idnumber,
+            'programtimecompleted' => time(),
+            'programallocationid' => '111',
+        ];
+        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
         $this->assertTrue($filesize > 30000 && $filesize < 90000);
