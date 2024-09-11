@@ -362,7 +362,7 @@ final class element extends \tool_certificate\element {
                 }
             } else if ($pf->programfield === 'customfield') {
                 $cfs = $this->get_customfields();
-                if (isset($cfs[$pf->customfieldid])) {
+                if (isset($cfs[$pf->customfieldid]) && isset($data->programid)) {
                     // Ignore the visibility here and use lower level API.
                     $cfdata = \core_customfield\api::get_instance_fields_data(
                         [$pf->customfieldid => $cfs[$pf->customfieldid]], $data->programid);

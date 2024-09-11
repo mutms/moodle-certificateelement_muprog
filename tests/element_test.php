@@ -370,6 +370,7 @@ final class element_test extends \advanced_testcase {
         $filesize = \core_text::strlen($filecontents);
         $this->assertTrue($filesize > 30000 && $filesize < 90000);
 
+        // Deleted program.
         \enrol_programs\local\program::delete_program($program2->id);
         $issuedata = [
             'programid' => $program2->id,
@@ -379,6 +380,12 @@ final class element_test extends \advanced_testcase {
             'programallocationid' => '111',
         ];
         $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
+        $filecontents = $generator->generate_pdf($certificate1, false, $issue);
+        $filesize = \core_text::strlen($filecontents);
+        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+
+        // Incorrectly manually generated cert.
+        $issue = $generator->issue($certificate1, $user);
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
         $this->assertTrue($filesize > 30000 && $filesize < 90000);
