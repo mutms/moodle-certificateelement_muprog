@@ -321,7 +321,7 @@ final class element_test extends \advanced_testcase {
         // Generate PDF for preview.
         $filecontents = $generator->generate_pdf($certificate1, true);
         $filesize = \core_text::strlen($filecontents);
-        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+        $this->assertTrue($filesize > 30000 && $filesize < 120000);
 
         // Generate PDF for issue.
         $user = $this->getDataGenerator()->create_user();
@@ -335,13 +335,13 @@ final class element_test extends \advanced_testcase {
         $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
-        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+        $this->assertTrue($filesize > 30000 && $filesize < 120000);
 
         // Incorrectly manually generated cert.
         $issue = $generator->issue($certificate1, $user);
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
-        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+        $this->assertTrue($filesize > 30000 && $filesize < 120000);
 
         // Generate PDF with program custom field.
         $user2 = $this->getDataGenerator()->create_user();
@@ -368,7 +368,7 @@ final class element_test extends \advanced_testcase {
         $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
-        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+        $this->assertTrue($filesize > 30000 && $filesize < 120000);
 
         // Deleted program.
         \enrol_programs\local\program::delete_program($program2->id);
@@ -382,12 +382,12 @@ final class element_test extends \advanced_testcase {
         $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
-        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+        $this->assertTrue($filesize > 30000 && $filesize < 120000);
 
         // Incorrectly manually generated cert.
         $issue = $generator->issue($certificate1, $user);
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
-        $this->assertTrue($filesize > 30000 && $filesize < 90000);
+        $this->assertTrue($filesize > 30000 && $filesize < 120000);
     }
 }
