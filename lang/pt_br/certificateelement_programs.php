@@ -15,14 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin tool certificate element programs
+ * Strings for component 'certificateelement_programs', language 'en'.
  *
  * @package    certificateelement_programs
- * @copyright  2023 Open LMS (https://www.openlms.net/)
- * @author     Chris Tranel
+ * @copyright  2022 Open LMS (https://www.openlms.net/)
+ * @author     Petr Skoda
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['dateformat'] = 'Formato da data';
+$string['dateformat_help'] = 'Este é o formato da data que será exibido';
 $string['pluginname'] = 'Campo do programa';
 $string['privacy:metadata'] = 'O plug-in de campos do programa não armazena dados pessoais.';
 $string['programfield'] = 'Campo do programa';
