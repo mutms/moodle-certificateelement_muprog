@@ -26,6 +26,6 @@
 $string['dateformat'] = 'Datumsformat';
 $string['dateformat_help'] = 'Dabei handelt es sich um das Format des angezeigten Datums';
 $string['pluginname'] = 'Programmfeld';
-$string['privacy:metadata'] = 'Das Plugin \''Programmfeld\'' speichert keine personenbezogenen Daten.';
+$string['privacy:metadata'] = 'Das Plugin \'Programmfeld\' speichert keine personenbezogenen Daten.';
 $string['programfield'] = 'Programmfeld';
 $string['programfield_help'] = 'Dabei handelt es sich um das Programmfeld, das in der PDF-Datei angezeigt wird.';
