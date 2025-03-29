@@ -1,4 +1,4 @@
-@tool @tool_certificate @certificateelement_programs @openlms @javascript
+@tool @tool_certificate @certificateelement_muprog @muTMS @javascript @tool_muprog
 Feature: Being able to manage programs elements in a certificate template
 
   Background:
@@ -24,15 +24,15 @@ Feature: Being able to manage programs elements in a certificate template
       | Element name  | Nazev            |
       | Program field | Program name     |
     And I set the following fields to these values:
-      | Element name  | ID programu      |
-      | Program field | Program idnumber |
+      | Element name  | ID programu |
+      | Program field | Program ID  |
     And I click on "Save" "button" in the ".modal.show .modal-footer" "css_element"
     Then I should see "ID programu" in the "[data-region='elementlist']" "css_element"
 
     When I click on "Edit 'ID programu'" "link" in the "[data-region='elementlist']" "css_element"
     And the following fields match these values:
-      | Element name  | ID programu      |
-      | Program field | Program idnumber |
+      | Element name  | ID programu |
+      | Program field | Program ID  |
     And I click on "Cancel" "button" in the ".modal.show .modal-footer" "css_element"
     Then I should see "ID programu" in the "[data-region='elementlist']" "css_element"
 

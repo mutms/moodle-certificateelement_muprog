@@ -1,31 +1,20 @@
 <?php
-// This file is part of the tool_certificate plugin for Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// Programs fields plugin for Certificate plugin for Moodle™.
 
-namespace certificateelement_programs;
+namespace certificateelement_muprog\phpunit;
+
+use certificateelement_muprog\element;
 
 /**
  * Unit tests for programs element.
  *
- * @group     openlms
- * @package   certificateelement_programs
- * @copyright 2022 Open LMS (https://www.openlms.net/)
- * @author    Petr Skoda
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group      openlms
+ * @package    certificateelement_muprog
+ * @copyright  2022 Open LMS (https://www.openlms.net/)
+ * @author     Petr Skoda
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * @coversDefaultClass \certificateelement_programs\element
+ * @coversDefaultClass element
  */
 final class element_test extends \advanced_testcase {
     /**
@@ -50,7 +39,7 @@ final class element_test extends \advanced_testcase {
         $this->setAdminUser();
 
         $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
-            'component' => 'enrol_programs',
+            'component' => 'tool_muprog',
             'area' => 'fields',
             'name' => 'Program custom fields',
         ]);
@@ -171,23 +160,23 @@ final class element_test extends \advanced_testcase {
         $pageid = $generator->create_page($certificate1)->get_id();
 
         /** @var element $element */
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Nazev', 'programfield' => 'fullname']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Nazev', 'programfield' => 'fullname']);
         $this->assertSame(['programfield' => 'fullname'], (array)$element->get_programfield());
 
         /** @var element $element */
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'ID programu', 'programfield' => 'idnumber']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'ID programu', 'programfield' => 'idnumber']);
         $this->assertSame(['programfield' => 'idnumber'], (array)$element->get_programfield());
 
         /** @var element $element */
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Odkaz', 'programfield' => 'url']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Odkaz', 'programfield' => 'url']);
         $this->assertSame(['programfield' => 'url'], (array)$element->get_programfield());
 
         /** @var element $element */
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Dokonceno', 'programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Dokonceno', 'programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
         $this->assertSame(['programfield' => 'timecompleted', 'dateformat' => 'strftimedate'], (array)$element->get_programfield());
 
         $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
-            'component' => 'enrol_programs',
+            'component' => 'tool_muprog',
             'area' => 'fields',
             'name' => 'Program custom fields',
         ]);
@@ -198,7 +187,7 @@ final class element_test extends \advanced_testcase {
             'categoryid' => $fieldcategory->get('id'),
         ]);
         /** @var element $element */
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
         $this->assertSame(['programfield' => 'customfield', 'customfieldid' => $field1->get('id')], (array)$element->get_programfield());
     }
 
@@ -214,33 +203,33 @@ final class element_test extends \advanced_testcase {
         $certificate1 = $generator->create_template((object)['name' => 'Certificate 1']);
         $pageid = $generator->create_page($certificate1)->get_id();
 
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Nazev', 'programfield' => 'fullname']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Nazev', 'programfield' => 'fullname']);
         $result = $element->prepare_data_for_form();
         $this->assertSame('fullname', $result->programfield);
         $this->assertSame('Nazev', $result->name);
 
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'ID programu', 'programfield' => 'idnumber']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'ID programu', 'programfield' => 'idnumber']);
         $result = $element->prepare_data_for_form();
         $this->assertSame('idnumber', $result->programfield);
         $this->assertSame('ID programu', $result->name);
 
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Odkaz', 'programfield' => 'url']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Odkaz', 'programfield' => 'url']);
         $result = $element->prepare_data_for_form();
         $this->assertSame('url', $result->programfield);
         $this->assertSame('Odkaz', $result->name);
 
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Dokonceno', 'programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Dokonceno', 'programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
         $result = $element->prepare_data_for_form();
         $this->assertSame('timecompleted', $result->programfield);
         $this->assertSame('strftimedate', $result->dateformat);
         $this->assertSame('Dokonceno', $result->name);
 
-        $element = element::instance(0, (object)['pageid' => $pageid, 'element' => 'programs']);
+        $element = element::instance(0, (object)['pageid' => $pageid, 'element' => 'muprog']);
         $result = $element->prepare_data_for_form();
         $this->assertSame(null, $result->programfield);
 
         $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
-            'component' => 'enrol_programs',
+            'component' => 'tool_muprog',
             'area' => 'fields',
             'name' => 'Program custom fields',
         ]);
@@ -250,7 +239,7 @@ final class element_test extends \advanced_testcase {
             'type' => 'text',
             'categoryid' => $fieldcategory->get('id'),
         ]);
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
         $result = $element->prepare_data_for_form();
         $this->assertSame('customfield', $result->programfield);
         $this->assertSame($field1->get('id'), $result->customfieldid);
@@ -270,22 +259,22 @@ final class element_test extends \advanced_testcase {
         $certificate1 = $generator->create_template((object)['name' => 'Certificate 1']);
         $pageid = $generator->create_page($certificate1)->get_id();
 
-        $element = $generator->create_element($pageid, 'programs', ['programfield' => 'fullname']);
+        $element = $generator->create_element($pageid, 'muprog', ['programfield' => 'fullname']);
         $this->assertStringContainsString('Program 001', $element->render_html());
 
         $formdata = (object)['name' => 'Program id', 'programfield' => 'idnumber'];
-        $element = $generator->create_element($pageid, 'programs', $formdata);
+        $element = $generator->create_element($pageid, 'muprog', $formdata);
         $this->assertStringContainsString('P001', $element->render_html());
 
-        $element = $generator->create_element($pageid, 'programs', ['programfield' => 'url']);
-        $this->assertStringContainsString('https://www.example.com/moodle/enrol/programs/catalogue/program?id=1', $element->render_html());
+        $element = $generator->create_element($pageid, 'muprog', ['programfield' => 'url']);
+        $this->assertStringContainsString('https://www.example.com/moodle/admin/tool/muprog/catalogue/program?id=1', $element->render_html());
 
-        $element = $generator->create_element($pageid, 'programs', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
+        $element = $generator->create_element($pageid, 'muprog', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
         $date = userdate(time(), '%d %B %Y');
         $this->assertStringContainsString($date, $element->render_html());
 
         $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
-            'component' => 'enrol_programs',
+            'component' => 'tool_muprog',
             'area' => 'fields',
             'name' => 'Program custom fields',
         ]);
@@ -295,7 +284,7 @@ final class element_test extends \advanced_testcase {
             'type' => 'text',
             'categoryid' => $fieldcategory->get('id'),
         ]);
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
         $this->assertStringContainsString('[Extra text field]', $element->render_html());
     }
 
@@ -305,18 +294,18 @@ final class element_test extends \advanced_testcase {
     public function test_render(): void {
         /** @var \tool_certificate_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('tool_certificate');
-        /** @var \enrol_programs_generator $programgenerator */
-        $programgenerator = $this->getDataGenerator()->get_plugin_generator('enrol_programs');
+        /** @var \tool_muprog_generator $programgenerator */
+        $programgenerator = $this->getDataGenerator()->get_plugin_generator('tool_muprog');
 
         $this->setAdminUser();
 
         $program1 = $programgenerator->create_program();
         $certificate1 = $generator->create_template((object)['name' => 'Certificate 1']);
         $pageid = $generator->create_page($certificate1)->get_id();
-        $generator->create_element($pageid, 'programs', ['programfield' => 'fullname']);
-        $generator->create_element($pageid, 'programs', ['name' => 'Program id', 'programfield' => 'idnumber']);
-        $generator->create_element($pageid, 'programs', ['programfield' => 'url']);
-        $generator->create_element($pageid, 'programs', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
+        $generator->create_element($pageid, 'muprog', ['programfield' => 'fullname']);
+        $generator->create_element($pageid, 'muprog', ['name' => 'Program id', 'programfield' => 'idnumber']);
+        $generator->create_element($pageid, 'muprog', ['programfield' => 'url']);
+        $generator->create_element($pageid, 'muprog', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
 
         // Generate PDF for preview.
         $filecontents = $generator->generate_pdf($certificate1, true);
@@ -332,7 +321,7 @@ final class element_test extends \advanced_testcase {
             'programtimecompleted' => time(),
             'programallocationid' => '10',
         ];
-        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
+        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'tool_muprog');
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
         $this->assertTrue($filesize > 30000 && $filesize < 120000);
@@ -346,7 +335,7 @@ final class element_test extends \advanced_testcase {
         // Generate PDF with program custom field.
         $user2 = $this->getDataGenerator()->create_user();
         $fieldcategory = $this->getDataGenerator()->create_custom_field_category([
-            'component' => 'enrol_programs',
+            'component' => 'tool_muprog',
             'area' => 'fields',
             'name' => 'Program custom fields',
         ]);
@@ -356,7 +345,7 @@ final class element_test extends \advanced_testcase {
             'type' => 'text',
             'categoryid' => $fieldcategory->get('id'),
         ]);
-        $element = $generator->create_element($pageid, 'programs', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
+        $element = $generator->create_element($pageid, 'muprog', ['name' => 'Some text', 'programfield' => 'customfield', 'customfieldid' => $field1->get('id')]);
         $program2 = $programgenerator->create_program(['customfield_testfield1' => 'abc']);
         $issuedata = [
             'programid' => $program2->id,
@@ -365,13 +354,13 @@ final class element_test extends \advanced_testcase {
             'programtimecompleted' => time(),
             'programallocationid' => '111',
         ];
-        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
+        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'tool_muprog');
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
         $this->assertTrue($filesize > 30000 && $filesize < 120000);
 
         // Deleted program.
-        \enrol_programs\local\program::delete_program($program2->id);
+        \tool_muprog\local\program::delete_program($program2->id);
         $issuedata = [
             'programid' => $program2->id,
             'programfullname' => $program2->fullname,
@@ -379,7 +368,7 @@ final class element_test extends \advanced_testcase {
             'programtimecompleted' => time(),
             'programallocationid' => '111',
         ];
-        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'enrol_programs');
+        $issue = $generator->issue($certificate1, $user, null, $issuedata, 'tool_muprog');
         $filecontents = $generator->generate_pdf($certificate1, false, $issue);
         $filesize = \core_text::strlen($filecontents);
         $this->assertTrue($filesize > 30000 && $filesize < 120000);

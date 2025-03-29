@@ -1,40 +1,25 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// Programs fields plugin for Certificate plugin for Moodle™.
 
 /**
  * Program fields.
  *
- * @package    certificateelement_programs
- * @copyright  2022 Open LMS (https://www.openlms.net/)
- * @author     Petr Skoda
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     certificateelement_muprog
+ * @copyright   2025 Petr Skoda
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 /** @var stdClass $plugin */
-
-$plugin->version   = 2024091900;
-$plugin->requires  = 2024091700.00; // 4.5.0
-$plugin->component = 'certificateelement_programs';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = 'v4.0.1';
+$plugin->component = 'certificateelement_muprog';
+$plugin->version   = 2025040900;
+$plugin->requires  = 2024091700.00;
+$plugin->maturity  = MATURITY_ALPHA;
 $plugin->supported = [405, 405];
+$plugin->release   = 'mu-4.5.3-04';
 
 $plugin->dependencies = [
-    'tool_certify' => 2024091900,
+    'tool_muprog' => 2025040900,
     'tool_certificate' => 2024090300,
 ];

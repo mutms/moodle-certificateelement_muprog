@@ -1,31 +1,18 @@
 <?php
-// This file is part of the tool_certificate plugin for Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// Programs fields plugin for Certificate plugin for Moodle™.
 
-namespace certificateelement_programs;
+namespace certificateelement_muprog;
 
 /**
  * The certificate element for programs fields.
  *
- * @package    certificateelement_programs
+ * @package    certificateelement_muprog
  * @copyright  2022 Open LMS (https://www.openlms.net/)
  * @author     Petr Skoda
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class element extends \tool_certificate\element {
-    /** @var \core_customfield\field_controller[] cached fields */
+    /** @var string[] */
     private $fields = null;
 
     /**
@@ -35,13 +22,13 @@ final class element extends \tool_certificate\element {
      */
     public static function get_program_fields(): array {
         $fields = [
-            'fullname' => get_string('programname', 'enrol_programs'),
-            'idnumber' => get_string('programidnumber', 'enrol_programs'),
-            'url' => get_string('programurl', 'enrol_programs'),
-            'timecompleted' => get_string('programcompletion', 'enrol_programs'),
+            'fullname' => get_string('programname', 'tool_muprog'),
+            'idnumber' => get_string('programidnumber', 'tool_muprog'),
+            'url' => get_string('programurl', 'tool_muprog'),
+            'timecompleted' => get_string('programcompletion', 'tool_muprog'),
         ];
 
-        $handler = \enrol_programs\customfield\fields_handler::create();
+        $handler = \tool_muprog\customfield\fields_handler::create();
         if ($handler->get_fields()) {
             $fields['customfield'] = get_string('customfield', 'core_customfield');
         }
@@ -171,7 +158,7 @@ final class element extends \tool_certificate\element {
      */
     public function get_customfields(): array {
         if ($this->fields === null) {
-            $handler = \enrol_programs\customfield\fields_handler::create();
+            $handler = \tool_muprog\customfield\fields_handler::create();
             $this->fields = $handler->get_fields();
         }
         return $this->fields;
@@ -203,11 +190,11 @@ final class element extends \tool_certificate\element {
         $dateformats = self::get_date_formats();
 
         // Create the select box where the user field is selected.
-        $mform->addElement('select', 'programfield', get_string('programfield', 'certificateelement_programs'), $fields);
-        $mform->addHelpButton('programfield', 'programfield', 'certificateelement_programs');
+        $mform->addElement('select', 'programfield', get_string('programfield', 'certificateelement_muprog'), $fields);
+        $mform->addHelpButton('programfield', 'programfield', 'certificateelement_muprog');
 
-        $mform->addElement('select', 'dateformat', get_string('dateformat', 'certificateelement_programs'), $dateformats);
-        $mform->addHelpButton('dateformat', 'dateformat', 'certificateelement_programs');
+        $mform->addElement('select', 'dateformat', get_string('dateformat', 'certificateelement_muprog'), $dateformats);
+        $mform->addHelpButton('dateformat', 'dateformat', 'certificateelement_muprog');
 
         $nondates = $fields;
         foreach (self::get_date_fields() as $field) {
@@ -293,7 +280,7 @@ final class element extends \tool_certificate\element {
         } else if ($pf->programfield === 'idnumber') {
             $value = 'P001';
         } else if ($pf->programfield === 'url') {
-            $url = new \moodle_url('/enrol/programs/catalogue/program', ['id' => 1]);
+            $url = new \moodle_url('/admin/tool/muprog/catalogue/program', ['id' => 1]);
             $value = \html_writer::link($url, $url->out(false));
         } else if ($pf->programfield === 'timecompleted') {
             $value = $this->format_date(time(), $pf->dateformat);
@@ -353,7 +340,7 @@ final class element extends \tool_certificate\element {
                 }
             } else if ($pf->programfield === 'url') {
                 if (isset($data->programid)) {
-                    $url = new \moodle_url('/enrol/programs/catalogue/program', ['id' => $data->programid]);
+                    $url = new \moodle_url('/admin/tool/muprog/catalogue/program', ['id' => $data->programid]);
                     $value = \html_writer::link($url, $url->out(false));
                 }
             } else if ($pf->programfield === 'timecompleted') {
