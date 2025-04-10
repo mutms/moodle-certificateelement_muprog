@@ -1,5 +1,8 @@
 <?php
 // Programs fields plugin for Certificate plugin for Moodle™.
+// phpcs:disable moodle.Files.BoilerplateComment.CommentEndedTooSoon
+// phpcs:disable moodle.Files.LineLength.TooLong
+// phpcs:disable moodle.Commenting.DocblockDescription.Missing
 
 namespace certificateelement_muprog\phpunit;
 
@@ -14,7 +17,7 @@ use certificateelement_muprog\element;
  * @author     Petr Skoda
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * @coversDefaultClass element
+ * @coversDefaultClass \certificateelement_muprog\element
  */
 final class element_test extends \advanced_testcase {
     /**
@@ -54,7 +57,7 @@ final class element_test extends \advanced_testcase {
             'name' => 'Extra checkbox field',
             'type' => 'checkbox',
             'categoryid' => $fieldcategory->get('id'),
-            'configdata' => ['visibilitymanagers' => true]
+            'configdata' => ['visibilitymanagers' => true],
         ]);
 
         $fields2 = element::get_program_fields();

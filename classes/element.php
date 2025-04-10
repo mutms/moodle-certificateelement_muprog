@@ -1,5 +1,6 @@
 <?php
 // Programs fields plugin for Certificate plugin for Moodle™.
+// phpcs:disable moodle.Files.BoilerplateComment.CommentEndedTooSoon
 
 namespace certificateelement_muprog;
 

@@ -1,5 +1,6 @@
 <?php
 // Programs fields plugin for Certificate plugin for Moodle™.
+// phpcs:disable moodle.Files.BoilerplateComment.CommentEndedTooSoon
 
 /**
  * Strings for component 'certificateelement_muprog', language 'en'.

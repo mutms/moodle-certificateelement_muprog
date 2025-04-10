@@ -1,4 +1,4 @@
-@tool @tool_certificate @certificateelement_muprog @muTMS @javascript @tool_muprog
+@tool @tool_certificate @certificateelement @certificateelement_muprog @muTMS @javascript @tool_muprog
 Feature: Being able to manage programs elements in a certificate template
 
   Background:
