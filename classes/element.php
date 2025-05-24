@@ -43,7 +43,7 @@ final class element extends \tool_certificate\element {
             'timecompleted' => get_string('programcompletion', 'tool_muprog'),
         ];
 
-        $handler = \tool_muprog\customfield\fields_handler::create();
+        $handler = \tool_muprog\customfield\program_handler::create();
         if ($handler->get_fields()) {
             $fields['customfield'] = get_string('customfield', 'core_customfield');
         }
@@ -173,7 +173,7 @@ final class element extends \tool_certificate\element {
      */
     public function get_customfields(): array {
         if ($this->fields === null) {
-            $handler = \tool_muprog\customfield\fields_handler::create();
+            $handler = \tool_muprog\customfield\program_handler::create();
             $this->fields = $handler->get_fields();
         }
         return $this->fields;
