@@ -25,7 +25,7 @@ use certificateelement_muprog\element;
 /**
  * Unit tests for programs element.
  *
- * @group      openlms
+ * @group      MuTMS
  * @package    certificateelement_muprog
  * @copyright  2022 Open LMS (https://www.openlms.net/)
  * @author     Petr Skoda
