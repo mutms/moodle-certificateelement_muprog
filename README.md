@@ -19,6 +19,12 @@ This plugin is recommended for the [Programs plugin](https://github.com/mutms/mo
 
 See [online documentation](https://docs.mutms.org/muprog/) for more information.
 
+## AI disclosure
+
+Parts of this plugin were written with the help of Claude (Anthropic). A human
+maintainer reviewed, corrected and accepted everything before it was committed.
+The design decisions and the final code are the maintainer's own.
+
 ---
 
 > This plugin is a fork of [Programs certificate element by Open LMS](https://github.com/open-lms-open-source/moodle-certificateelement_programs),
