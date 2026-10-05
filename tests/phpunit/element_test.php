@@ -285,7 +285,7 @@ final class element_test extends \advanced_testcase {
         $this->assertStringContainsString('P001', $element->render_html());
 
         $element = $generator->create_element($pageid, 'muprog', ['programfield' => 'url']);
-        $this->assertStringContainsString('https://www.example.com/moodle/admin/tool/muprog/catalogue/program?id=1', $element->render_html());
+        $this->assertStringContainsString('https://www.example.com/moodle/admin/tool/muprog/my/program.php?id=1', $element->render_html());
 
         $element = $generator->create_element($pageid, 'muprog', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
         $date = userdate(time(), '%d %B %Y');

@@ -293,7 +293,7 @@ final class element extends \tool_certificate\element {
         } else if ($pf->programfield === 'idnumber') {
             $value = 'P001';
         } else if ($pf->programfield === 'url') {
-            $url = new \moodle_url('/admin/tool/muprog/catalogue/program', ['id' => 1]);
+            $url = new \moodle_url('/admin/tool/muprog/my/program.php', ['id' => 1]);
             $value = \html_writer::link($url, $url->out(false));
         } else if ($pf->programfield === 'timecompleted') {
             $value = $this->format_date(time(), $pf->dateformat);
@@ -353,7 +353,7 @@ final class element extends \tool_certificate\element {
                 }
             } else if ($pf->programfield === 'url') {
                 if (isset($data->programid)) {
-                    $url = new \moodle_url('/admin/tool/muprog/catalogue/program', ['id' => $data->programid]);
+                    $url = new \moodle_url('/admin/tool/muprog/my/program.php', ['id' => $data->programid]);
                     $value = \html_writer::link($url, $url->out(false));
                 }
             } else if ($pf->programfield === 'timecompleted') {
